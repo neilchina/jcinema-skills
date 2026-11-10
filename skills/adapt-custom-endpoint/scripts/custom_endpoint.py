@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Thin stdlib CLI for ArcReel custom endpoint HTTP APIs."""
+"""Thin stdlib CLI for J·CINEMA custom endpoint HTTP APIs."""
 
 from __future__ import annotations
 
@@ -19,25 +19,25 @@ from urllib.request import Request, urlopen
 def _validated_url(value: str, source: str) -> str:
     value = value.strip()
     if any(char.isspace() for char in value):
-        raise SystemExit(f"ArcReel URL in {source} must not contain whitespace")
+        raise SystemExit(f"J·CINEMA URL in {source} must not contain whitespace")
     if not all(char.isascii() and char.isprintable() for char in value):
-        raise SystemExit(f"ArcReel URL in {source} must contain only printable ASCII characters")
+        raise SystemExit(f"J·CINEMA URL in {source} must contain only printable ASCII characters")
     try:
         parsed = urlsplit(value)
         host = parsed.hostname
         port = parsed.port
     except ValueError as exc:
-        raise SystemExit(f"Invalid ArcReel URL in {source}: {exc}") from exc
+        raise SystemExit(f"Invalid J·CINEMA URL in {source}: {exc}") from exc
     if not host or parsed.scheme not in {"http", "https"}:
-        raise SystemExit(f"ArcReel URL in {source} must include an HTTP(S) scheme and host")
+        raise SystemExit(f"J·CINEMA URL in {source} must include an HTTP(S) scheme and host")
     try:
         loopback = host == "localhost" or ipaddress.ip_address(host).is_loopback
     except ValueError:
         loopback = host == "localhost"
     if port == 0:
-        raise SystemExit(f"ArcReel URL in {source} must use a valid port")
+        raise SystemExit(f"J·CINEMA URL in {source} must use a valid port")
     if parsed.scheme != "https" and not loopback:
-        raise SystemExit(f"ArcReel URL in {source} must use HTTPS unless the host is loopback")
+        raise SystemExit(f"J·CINEMA URL in {source} must use HTTPS unless the host is loopback")
     return value.rstrip("/")
 
 
@@ -45,39 +45,43 @@ def _mcp_api_base(value: str, source: str) -> str:
     value = _validated_url(value, source)
     parsed = urlsplit(value)
     if not parsed.path.endswith("/mcp") or parsed.query or parsed.fragment:
-        raise SystemExit(f"ArcReel settings mcp_url must end with /mcp and omit query and fragment: {source}")
+        raise SystemExit(f"J·CINEMA settings mcp_url must end with /mcp and omit query and fragment: {source}")
     return f"{value.removesuffix('/mcp')}/api/v1"
 
 
 def _validated_token(value: str, source: str) -> str:
     value = value.strip()
     if not all(char.isascii() and char.isprintable() for char in value):
-        raise SystemExit(f"ArcReel token in {source} must contain only printable ASCII characters")
+        raise SystemExit(f"J·CINEMA token in {source} must contain only printable ASCII characters")
     return value
 
 
 def _connection() -> tuple[str, str]:
-    if os.environ.get("ARCREEL_EMBEDDED_AGENT") == "1" and (base := os.environ.get("ARCREEL_API_BASE", "").strip()):
-        return _validated_url(base, "ARCREEL_API_BASE"), _validated_token(
-            os.environ.get("ARCREEL_API_TOKEN", ""), "ARCREEL_API_TOKEN"
+    if os.environ.get("JCINEMA_EMBEDDED_AGENT") == "1" and (base := os.environ.get("JCINEMA_API_BASE", "").strip()):
+        return _validated_url(base, "JCINEMA_API_BASE"), _validated_token(
+            os.environ.get("JCINEMA_API_TOKEN", ""), "JCINEMA_API_TOKEN"
         )
 
-    settings_path = Path.cwd() / ".arcreel" / "settings.json"
+    settings_path = Path.cwd() / ".jcinema" / "settings.json"
+    legacy_path = Path.cwd() / ".arcreel" / "settings.json"
+    if not settings_path.exists() and legacy_path.exists():
+        # 兼容改名前的 setup skill 写下的旧位置
+        settings_path = legacy_path
     try:
         settings = _json_file(str(settings_path))
     except (OSError, json.JSONDecodeError, UnicodeDecodeError) as exc:
-        raise SystemExit(f"Cannot read ArcReel settings {settings_path}: {exc}") from exc
+        raise SystemExit(f"Cannot read J·CINEMA settings {settings_path}: {exc}") from exc
     if not isinstance(settings, dict):
-        raise SystemExit(f"ArcReel settings must be a JSON object: {settings_path}")
+        raise SystemExit(f"J·CINEMA settings must be a JSON object: {settings_path}")
     mcp_url = settings.get("mcp_url")
     api_key = settings.get("api_key")
     if not isinstance(mcp_url, str):
-        raise SystemExit(f"ArcReel settings mcp_url must end with /mcp: {settings_path}")
+        raise SystemExit(f"J·CINEMA settings mcp_url must end with /mcp: {settings_path}")
     if not isinstance(api_key, str):
-        raise SystemExit(f"ArcReel settings api_key must start with arc-: {settings_path}")
+        raise SystemExit(f"J·CINEMA settings api_key must start with arc-: {settings_path}")
     api_key = _validated_token(api_key, f"{settings_path} api_key")
     if not api_key.startswith("arc-"):
-        raise SystemExit(f"ArcReel settings api_key must start with arc-: {settings_path}")
+        raise SystemExit(f"J·CINEMA settings api_key must start with arc-: {settings_path}")
     return _mcp_api_base(mcp_url, str(settings_path)), api_key
 
 
@@ -87,7 +91,7 @@ def _json_file(path: str) -> object:
 
 
 def _multipart(payload: object, files: list[tuple[str, Path]]) -> tuple[bytes, str]:
-    boundary = f"arcreel-{secrets.token_hex(16)}"
+    boundary = f"jcinema-{secrets.token_hex(16)}"
     chunks = [
         f'--{boundary}\r\nContent-Disposition: form-data; name="payload"\r\n'
         "Content-Type: application/json; charset=utf-8\r\n\r\n".encode(),
@@ -136,16 +140,16 @@ def _request(
             raw = response.read()
     except HTTPError as exc:
         detail = exc.read().decode("utf-8", errors="replace")
-        raise SystemExit(f"ArcReel API returned HTTP {exc.code}: {detail}") from exc
+        raise SystemExit(f"J·CINEMA API returned HTTP {exc.code}: {detail}") from exc
     except URLError as exc:
-        raise SystemExit(f"ArcReel API request failed: {exc.reason}") from exc
+        raise SystemExit(f"J·CINEMA API request failed: {exc.reason}") from exc
     if not raw:
         return {"status": "ok"}
     try:
         return json.loads(raw)
     except (json.JSONDecodeError, UnicodeDecodeError) as exc:
         preview = raw[:200].decode("utf-8", errors="replace")
-        raise SystemExit(f"ArcReel API returned non-JSON response: {preview}") from exc
+        raise SystemExit(f"J·CINEMA API returned non-JSON response: {preview}") from exc
 
 
 def _test_payload(args: argparse.Namespace) -> dict[str, object]:

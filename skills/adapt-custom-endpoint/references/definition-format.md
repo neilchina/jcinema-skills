@@ -1,7 +1,7 @@
-# ArcReel 自定义调用端点定义格式
+# J·CINEMA 自定义调用端点定义格式
 
 服务端共享 validator 是保存、预览请求、验证响应和测试连接的最终判据。当前完整 JSON Schema 位于
-[`packages/arcreel-market-core/src/arcreel_market_core/endpoint_definition/schema.json`](https://github.com/ArcReel/ArcReel/blob/main/packages/arcreel-market-core/src/arcreel_market_core/endpoint_definition/schema.json)；
+[`packages/jcinema-market-core/src/jcinema_market_core/endpoint_definition/schema.json`](https://github.com/ArcReel/ArcReel/blob/main/packages/jcinema-market-core/src/jcinema_market_core/endpoint_definition/schema.json)；
 先写最小定义，再根据 `validate` 返回的字段路径与错误码修正。
 
 ## 最小形状
@@ -47,7 +47,7 @@
 - 素材在 `inputs` 声明，`source` 取 `start_image`、`end_image`、`reference_images` 或
   `reference_audio_files`，`encoding` 取 `data_uri` 或 `base64`。列表素材用 `$each` 展开；可选对象
   用 `$when` 守卫。`capabilities` 必须与 submit 实际引用的素材双向一致。
-- `enum_maps` 把 ArcReel 参数值映射到供应商值；`defaults` 只为可选参数填 ArcReel 侧缺省值。
+- `enum_maps` 把 J·CINEMA 参数值映射到供应商值；`defaults` 只为可选参数填 J·CINEMA 侧缺省值。
 - `extract` 是按优先级排列的 JSONPath 数组。路径从 `$` 开始，只用 child segment 与简单过滤；
   不用递归下降、联合、带 step 的切片或函数。响应字段包含 JSON 字符串时使用
   `{"path":"$.data","json_decode":true,"then":["$.id"]}`。

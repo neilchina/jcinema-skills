@@ -1,6 +1,6 @@
-# ArcReel skills
+# J·CINEMA skills
 
-Public Agent skills for connecting an external Agent to [ArcReel](https://github.com/neilchina/ArcReel).
+Public Agent skills for connecting an external Agent to [J·CINEMA](https://github.com/neilchina/ArcReel).
 
 ## Install
 
@@ -10,8 +10,8 @@ npx skills add neilchina/jcinema-skills
 
 The package contains:
 
-- `setup-arcreel-skills` — connect an Agent host to ArcReel MCP and verify access.
-- `video-workflow` — route ArcReel video creation through the server's workflow plan.
+- `setup-jcinema-skills` — connect an Agent host to J·CINEMA MCP and verify access.
+- `video-workflow` — route J·CINEMA video creation through the server's workflow plan.
 
 This repository is a lightweight distribution mirror. Source changes are made in [neilchina/ArcReel](https://github.com/neilchina/ArcReel/tree/main/skills) and synced here automatically.
 

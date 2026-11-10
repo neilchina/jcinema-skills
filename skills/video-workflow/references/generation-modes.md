@@ -1,6 +1,6 @@
 # 内容与生成模式
 
-ArcReel 把内容类型与视频生成路径分开：
+J·CINEMA 把内容类型与视频生成路径分开：
 
 - `content_mode` 为 `narration`、`drama` 或 `ad`。
 - `generation_mode` 为 `storyboard` 或 `reference_video`。

@@ -1,8 +1,8 @@
 {
-  "name": "arcreel",
-  "description": "ArcReel 外部 Agent 接入与视频工作流 skills",
+  "name": "jcinema",
+  "description": "J·CINEMA 外部 Agent 接入与视频工作流 skills",
   "skills": [
-    "./skills/setup-arcreel-skills",
+    "./skills/setup-jcinema-skills",
     "./skills/video-workflow"
   ]
 }
